@@ -179,7 +179,7 @@ app.get("/checkUser/:username", async (req, res) => {
   // console.log(req.body);
   try {
     const username = req.params.username;
-    const user = await User.findOne({ username }); // Assuming username is the field in your database that stores usernames
+    const user = await User.findOne({ username:username,user_category:1 }); // Assuming username is the field in your database that stores usernames
 
     if (user) {
       // User exists
@@ -220,7 +220,7 @@ app.post("/checkappliedTimeslots", async (req, res) => {
   }
 });
 
-app.post("/badminton/active_booking", async (req, res) => {
+app.post("/active_booking", async (req, res) => {
   console.log(req.body);
 
   //Searching for players mongoDB Ids
@@ -264,25 +264,6 @@ app.post("/badminton/active_booking", async (req, res) => {
       no_partners: mongodbIds.length,
       booking_status: 1,
     });
-    const bookings = await SportsBookings.find({
-      date_slot: current_date,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-    });
-    let length = bookings.length;
-
-    if (req.body.sport_type == "badminton" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "squash" && length >= 4) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "tennis" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "table_tennis" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
     const doc = await booking.save();
     res.json(doc);
   } catch (err) {
@@ -290,148 +271,10 @@ app.post("/badminton/active_booking", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 //////Pre-booking
-
-app.post("/badminton/pre_booking", async (req, res) => {
-  console.log(req.body);
-
-  //Searching for players mongoDB Ids
-  const mongodbIds = [];
-  try {
-    const players = await User.find(
-      { username: { $in: req.body.players } },
-      "_id username"
-    );
-    players.forEach((player) => {
-      mongodbIds.push(player._id.toString());
-    });
-    // Log MongoDB IDs
-    console.log("MongoDB IDs:", mongodbIds);
-    console.log(mongodbIds.length);
-
-    const name = req.body.slot;
-    const type_book = req.body.type;
-    let book = 1;
-    const hour = parseInt(name.split(":")[0], 10);
-    // var date = new Date();
-
-    // Get the current date
-    let currentDate = new Date();
-
-    // Get the next date
-    let nextDate = new Date(currentDate);
-    nextDate.setDate(currentDate.getDate() + 1); // Adding 1 day
-
-    // Format the next date as DD-MM-YYYY
-    let day = nextDate.getDate();
-    let month = nextDate.getMonth() + 1; // Month is zero-based, so add 1
-    let year = nextDate.getFullYear();
-
-    // Pad the day and month with leading zeros if needed
-    day = day < 10 ? "0" + day : day;
-    month = month < 10 ? "0" + month : month;
-
-    let nextDateFormatted = day + "-" + month + "-" + year;
-
-    // console.log("Next Date:", nextDateFormatted);
-
-    const booking = new SportsBookings({
-      user_id: req.body.user_id,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-      time_of_booking: new Date(),
-      date_slot: nextDateFormatted,
-      type_of_booking: book,
-      show_up_status: 0,
-      court_id: null,
-      partners_id: mongodbIds,
-      no_partners: mongodbIds.length,
-      booking_status: 0,
-    });
-    const doc = await booking.save();
-    res.json(doc);
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-app.post("/squash/active_booking", async (req, res) => {
-  console.log(req.body);
-
-  //Searching for players mongoDB Ids
-  const mongodbIds = [];
-  try {
-    const players = await User.find(
-      { username: { $in: req.body.players } },
-      "_id username"
-    );
-    players.forEach((player) => {
-      mongodbIds.push(player._id.toString());
-    });
-    // Log MongoDB IDs
-    console.log("MongoDB IDs:", mongodbIds);
-    console.log(mongodbIds.length);
-
-    const name = req.body.slot;
-    const type_book = req.body.type;
-    let book = 1;
-    if (type_book == "active") book = 0;
-    const hour = parseInt(name.split(":")[0], 10);
-    var date = new Date();
-    const current_date =
-      (date.getDate() < 10 ? "0" : "") +
-      date.getDate() +
-      "-" +
-      (date.getMonth() < 9 ? "0" : "") +
-      (date.getMonth() + 1) +
-      "-" +
-      date.getFullYear(); // Format the month as two digits
-
-    const booking = new SportsBookings({
-      user_id: req.body.user_id,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-      time_of_booking: new Date(),
-      date_slot: current_date,
-      type_of_booking: book,
-      show_up_status: 0,
-      court_id: null,
-      partners_id: mongodbIds,
-      no_partners: mongodbIds.length,
-      booking_status: 1,
-    });
-    const bookings = await SportsBookings.find({
-      date_slot: current_date,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-    });
-    let length = bookings.length;
-
-    if (req.body.sport_type == "badminton" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "squash" && length >= 4) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "tennis" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "table_tennis" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    const doc = await booking.save();
-    res.json(doc);
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-//////Pre-booking
-
-app.post("/squash/pre_booking", async (req, res) => {
+app.post("/pre_booking", async (req, res) => {
   console.log(req.body);
 
   //Searching for players mongoDB Ids
@@ -491,271 +334,137 @@ app.post("/squash/pre_booking", async (req, res) => {
   }
 });
 
-app.post("/tennis/active_booking", async (req, res) => {
+
+app.post("/getAvailableSlots", async (req, res) => {
+  const { date, type_of_sport,capacity } = req.body;
   console.log(req.body);
-
-  //Searching for players mongoDB Ids
-  const mongodbIds = [];
   try {
-    const players = await User.find(
-      { username: { $in: req.body.players } },
-      "_id username"
-    );
-    players.forEach((player) => {
-      mongodbIds.push(player._id.toString());
-    });
-    // Log MongoDB IDs
-    console.log("MongoDB IDs:", mongodbIds);
-    console.log(mongodbIds.length);
+    const bookings = await SportsBookings.find({ date_slot: date, type_of_sport: type_of_sport, booking_status: 1 });
+    const bookedSlots = bookings.reduce((acc, booking) => {
+      if (!acc[booking.time_slot]) {
+        acc[booking.time_slot] = 1;
+      } else {
+        acc[booking.time_slot]++;
+      }
+      return acc;
+    }, {});
+    console.log(bookedSlots);
+    // Generate all possible slots
+    const allSlots = [
+      "6", "7", "8","16", "17", 
+      "18", "19", "20"
+    ];
 
-    const name = req.body.slot;
-    const type_book = req.body.type;
-    let book = 1;
-    if (type_book == "active") book = 0;
-    const hour = parseInt(name.split(":")[0], 10);
-    var date = new Date();
-    const current_date =
-      (date.getDate() < 10 ? "0" : "") +
-      date.getDate() +
-      "-" +
-      (date.getMonth() < 9 ? "0" : "") +
-      (date.getMonth() + 1) +
-      "-" +
-      date.getFullYear(); // Format the month as two digits
-
-    const booking = new SportsBookings({
-      user_id: req.body.user_id,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-      time_of_booking: new Date(),
-      date_slot: current_date,
-      type_of_booking: book,
-      show_up_status: 0,
-      court_id: null,
-      partners_id: mongodbIds,
-      no_partners: mongodbIds.length,
-      booking_status: 1,
+    // Determine available slots
+    const availableSlots = allSlots.filter(slot => {
+      return !bookedSlots.hasOwnProperty(slot) || bookedSlots[slot] < capacity;
     });
-    const bookings = await SportsBookings.find({
-      date_slot: current_date,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-    });
-    let length = bookings.length;
 
-    if (req.body.sport_type == "badminton" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "squash" && length >= 4) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "tennis" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "table_tennis" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    const doc = await booking.save();
-    res.json(doc);
-  } catch (err) {
-    console.error("Error:", err);
+    res.json({ availableSlots });
+  } catch (error) {
+    console.error("Error fetching available slots for date:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-//////Pre-booking
 
-app.post("/tennis/pre_booking", async (req, res) => {
-  console.log(req.body);
 
-  //Searching for players mongoDB Ids
-  const mongodbIds = [];
+///////////Gym and Pool membership pass
+app.get('/gym/swim_pass', async (req, res) => {
   try {
-    const players = await User.find(
-      { username: { $in: req.body.players } },
-      "_id username"
-    );
-    players.forEach((player) => {
-      mongodbIds.push(player._id.toString());
+    const { userid, year, month,type } = req.query;
+    console.log(req.query);
+    // Fetch membership details from the database based on the provided parameters
+    const membershipDetails = await Gymbook.find({
+      user_id: userid,
+      year: year,
+      month: month,
+      type:type,
+      booking_status:1,
     });
-    // Log MongoDB IDs
-    console.log("MongoDB IDs:", mongodbIds);
-    console.log(mongodbIds.length);
 
-    const name = req.body.slot;
-    const type_book = req.body.type;
-    let book = 1;
-    const hour = parseInt(name.split(":")[0], 10);
-    // Get the current date
-    let currentDate = new Date();
 
-    // Get the next date
-    let nextDate = new Date(currentDate);
-    nextDate.setDate(currentDate.getDate() + 1); // Adding 1 day
-
-    // Format the next date as DD-MM-YYYY
-    let day = nextDate.getDate();
-    let month = nextDate.getMonth() + 1; // Month is zero-based, so add 1
-    let year = nextDate.getFullYear();
-
-    // Pad the day and month with leading zeros if needed
-    day = day < 10 ? "0" + day : day;
-    month = month < 10 ? "0" + month : month;
-
-    let nextDateFormatted = day + "-" + month + "-" + year;
-
-    const booking = new SportsBookings({
-      user_id: req.body.user_id,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-      time_of_booking: new Date(),
-      date_slot: nextDateFormatted,
-      type_of_booking: book,
-      show_up_status: 0,
-      court_id: null,
-      partners_id: mongodbIds,
-      no_partners: mongodbIds.length,
-      booking_status: 0,
+    const formattedTimeSlots = membershipDetails.map(detail => {
+      const startTime = `${detail.time_slot}:00 `; // Assuming slots are in AM
+      const endTime = `${detail.time_slot + 1}:00`; // Assuming each slot is 1 hour
+      return `${startTime}-${endTime}`;
     });
-    const doc = await booking.save();
-    res.json(doc);
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+
+    // Send the formatted time slots back to the client
+    res.json(formattedTimeSlots);
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred while fetching membership details." });
   }
 });
 
-app.post("/table_tennis/active_booking", async (req, res) => {
+
+
+///////////////////Gym and Pool Booking
+app.post("/gym/swim_booking", async (req, res) => {
   console.log(req.body);
-
-  //Searching for players mongoDB Ids
-  const mongodbIds = [];
   try {
-    const players = await User.find(
-      { username: { $in: req.body.players } },
-      "_id username"
-    );
-    players.forEach((player) => {
-      mongodbIds.push(player._id.toString());
+    const month = req.body.month;
+    const time_slot = parseInt(req.body.time_slot.split(":")[0], 10);
+    const user_id = req.body.user_id;
+    const year = req.body.year;
+    const time = req.body.time;
+    const type = req.body.type;
+    // Check if the user has already booked the same slot
+    const existingBooking = await Gymbook.findOne({
+      month: month,
+      time_slot: time_slot,
+      user_id: user_id,
+      year: year,
+      type:type,
     });
-    // Log MongoDB IDs
-    console.log("MongoDB IDs:", mongodbIds);
-    console.log(mongodbIds.length);
 
-    const name = req.body.slot;
-    const type_book = req.body.type;
-    let book = 1;
-    if (type_book == "active") book = 0;
-    const hour = parseInt(name.split(":")[0], 10);
-    var date = new Date();
-    const current_date =
-      (date.getDate() < 10 ? "0" : "") +
-      date.getDate() +
-      "-" +
-      (date.getMonth() < 9 ? "0" : "") +
-      (date.getMonth() + 1) +
-      "-" +
-      date.getFullYear(); // Format the month as two digits
+    if (existingBooking) {
+      // User has already booked the slot
+      console.log("booked");
+      return res.status(400).json({ error: "You have already booked this slot." });
+    }
 
-    const booking = new SportsBookings({
-      user_id: req.body.user_id,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-      time_of_booking: new Date(),
-      date_slot: current_date,
-      type_of_booking: book,
-      show_up_status: 0,
-      court_id: null,
-      partners_id: mongodbIds,
-      no_partners: mongodbIds.length,
-      booking_status: 1,
+    // Check if the maximum capacity for the slot has been reached
+    const countBookings = await Gymbook.countDocuments({
+      month: month,
+      time_slot: time_slot,
+      year: year,
+      booking_status:1,
+      type: type,
     });
-    const bookings = await SportsBookings.find({
-      date_slot: current_date,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-    });
-    let length = bookings.length;
 
-    if (req.body.sport_type == "badminton" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
+    if (countBookings >= 40) {
+      // Maximum capacity reached, save a document with booking_status -1
+      const unsuccessfulBooking = new Gymbook({
+        month: month,
+        time_slot: time_slot,
+        user_id: user_id,
+        type: type,
+        year: year,
+        booking_status: -1, // Set booking status to -1 for unsuccessful booking
+        time_of_booking: time,
+      });
+
+      await unsuccessfulBooking.save();
+      return res.status(400).json({ error: "Maximum capacity for this slot has been reached." });
     }
-    if (req.body.sport_type == "squash" && length >= 4) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "tennis" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
-    if (req.body.sport_type == "table_tennis" && length >= 6) {
-      return res.status(400).json({ error: "Court is full" });
-    }
+
+    // If all checks pass, proceed with booking
+    const booking = new Gymbook({
+      month: month,
+      time_slot: time_slot,
+      user_id: user_id,
+      type: type,
+      year: year,
+      booking_status: 1, // Set booking status to 1 for successful booking
+      time_of_booking: time,
+    });
+
     const doc = await booking.save();
     res.json(doc);
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred while processing your request." });
   }
 });
-
-//////Pre-booking
-
-app.post("/table_tennis/pre_booking", async (req, res) => {
-  console.log(req.body);
-
-  //Searching for players mongoDB Ids
-  const mongodbIds = [];
-  try {
-    const players = await User.find(
-      { username: { $in: req.body.players } },
-      "_id username"
-    );
-    players.forEach((player) => {
-      mongodbIds.push(player._id.toString());
-    });
-    // Log MongoDB IDs
-    console.log("MongoDB IDs:", mongodbIds);
-    console.log(mongodbIds.length);
-
-    const name = req.body.slot;
-    const type_book = req.body.type;
-    let book = 1;
-    const hour = parseInt(name.split(":")[0], 10);
-    // Get the current date
-    let currentDate = new Date();
-
-    // Get the next date
-    let nextDate = new Date(currentDate);
-    nextDate.setDate(currentDate.getDate() + 1); // Adding 1 day
-
-    // Format the next date as DD-MM-YYYY
-    let day = nextDate.getDate();
-    let month = nextDate.getMonth() + 1; // Month is zero-based, so add 1
-    let year = nextDate.getFullYear();
-
-    // Pad the day and month with leading zeros if needed
-    day = day < 10 ? "0" + day : day;
-    month = month < 10 ? "0" + month : month;
-
-    let nextDateFormatted = day + "-" + month + "-" + year;
-
-    const booking = new SportsBookings({
-      user_id: req.body.user_id,
-      time_slot: hour,
-      type_of_sport: req.body.sport_type,
-      time_of_booking: new Date(),
-      date_slot: nextDateFormatted,
-      type_of_booking: book,
-      show_up_status: 0,
-      court_id: null,
-      partners_id: mongodbIds,
-      no_partners: mongodbIds.length,
-      booking_status: 0,
-    });
-    const doc = await booking.save();
-    res.json(doc);
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
