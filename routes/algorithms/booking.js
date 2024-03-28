@@ -113,6 +113,10 @@ router.get("/sport_booking", async (req, res) => {
     //to refer to indices of unpaired users later in temp_pairing
     var dict = {};
     for (let k = 0; k + 1 < temp_pairing.length; k += 2) {
+      temp_pairing[k][11]++;
+      temp_pairing[k + 1][11]++;
+      temp_pairing[k][10] = temp_pairing[k + 1][3];
+      temp_pairing[k + 1][10] = temp_pairing[k][3];
       temp_rest.push(temp_pairing[k]);
       dict[temp_pairing[k][0]] = k;
       //consider average!!!

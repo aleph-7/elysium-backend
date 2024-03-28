@@ -75,27 +75,59 @@ router.get("/getWorkshops", async (req, res) => {
 });
 
 router.get("/statistics", async (req, res) => {
-  try {
-    let attributeList;
-    const sport = req.query.type_of_sport;
-    // Assuming the coach_user_id is passed as a query parameter
-    // Retrieve workshops associated with the specified coach_user_id
-    await Workshop.find({ type_of_sport: sport }).then((results) => {
-      attributeList = results.map((doc) => ({
-        content: doc.content,
-        participantsCount: doc.participants_id.length, // Get the length of participants_id array
-      }));
+  let attributeList = [];
+  let vacancies = [];
+  let totalStrength = [];
+  let participants = [];
+  let labels = [];
+  let finalAttributeList = [];
+  const sport = req.query.type_of_sport;
+  await Workshop.find({
+    type_of_sport: sport,
+  })
+    .then((results) => {
+      vacancies = results.map((doc) => doc.max_strength);
+      totalStrength = results.map(
+        (doc) => doc.participants_id.length + doc.max_strength
+      );
+      participants = results.map((doc) => doc.participants_id.length);
+    })
+    .catch((err) => {
+      console.log(err);
     });
-
-    console.log(attributeList);
-
-    // Sending the retrieved workshops as a response to the frontend
-    res.status(200).json({ attributeList });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Failed to retrieve workshops" });
+  for (let i = 0; i < vacancies.length; i++) {
+    labels.push("Workshop " + (i + 1));
   }
+  attributeList.push(labels, vacancies, totalStrength, participants, [
+    { data: vacancies, label: "vacancies" },
+    { data: participants, label: "participants" },
+    { data: totalStrength, label: "totalStrength" },
+  ]);
+  console.log(attributeList);
+  res.json({ message: attributeList });
 });
+// router.get("/statistics", async (req, res) => {
+//   try {
+//     let attributeList;
+//     const sport = req.query.type_of_sport;
+//     // Assuming the coach_user_id is passed as a query parameter
+//     // Retrieve workshops associated with the specified coach_user_id
+//     await Workshop.find({ type_of_sport: sport }).then((results) => {
+//       attributeList = results.map((doc) => ({
+//         content: doc.content,
+//         participantsCount: doc.participants_id.length, // Get the length of participants_id array
+//       }));
+//     });
+
+//     console.log(attributeList);
+
+//     // Sending the retrieved workshops as a response to the frontend
+//     res.status(200).json({ attributeList });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({ error: "Failed to retrieve workshops" });
+//   }
+// });
 
 router.post("/reserveCourt", async (req, res) => {
   try {

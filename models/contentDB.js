@@ -30,6 +30,7 @@ const yoga_sessionSchema = mongoose.Schema({
   yoga_instructor_user_id: mongoose.ObjectId,
   time_slot_start: Number,
   time_slot_end: Number,
+  location: String,
 });
 
 const blog_counsellorSchema = mongoose.Schema({
