@@ -70,6 +70,7 @@ router.post("/signup", async (req, res) => {
       user_id: doc._id,
       position: tennis_db_length + 1,
     });
+    await tennis_leaderboard.save();
     // Sending the response to the frontend
     res.status(201).json({ message: "Registration successful" });
   } catch (err) {
