@@ -3,7 +3,7 @@ const router = express.Router();
 
 const Workshop = require("./../models/contentDB").sport_workshopSchema;
 const SportsBookings = require("./../models/bookingsDB").sportBookingsSchema;
-
+const User = require("../models/userDB").userSchema;
 
 router.post("/postWorkshop", async (req, res) => {
   try {
@@ -30,6 +30,47 @@ router.post("/postWorkshop", async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Post failed" });
+  }
+});
+
+router.get("/getWorkshops", async (req, res) => {
+  try {
+    let attributeList;
+    const sport = req.query.type_of_sport;
+    // Assuming the coach_user_id is passed as a query parameter
+    // Retrieve workshops associated with the specified coach_user_id
+    await Workshop.find({ type_of_sport: sport }).then((results) => {
+      attributeList = results.map((doc) => [
+        doc.content,
+        doc.participants_id.length, // Get the length of participants_id array
+        doc.max_strength,
+        doc.participants_id,
+      ]);
+    });
+
+    for (let i = 0; i < attributeList.length; i++) {
+      let finalParticipantsList = [];
+      for (let j = 0; j < attributeList[i][3].length; j++) {
+        let user_id = attributeList[i][3][j];
+        try {
+          let user_name = await User.findOne({ _id: user_id });
+          if (!user_name) {
+            finalParticipantsList.push("Anonymous");
+          } else {
+            finalParticipantsList.push(user_name.username);
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      attributeList[i][3] = finalParticipantsList;
+    }
+    console.log(attributeList);
+    // Sending the retrieved workshops as a response to the frontend
+    res.status(200).json({ message: attributeList });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Failed to retrieve workshops" });
   }
 });
 
@@ -77,8 +118,5 @@ router.post("/reserveCourt", async (req, res) => {
     res.status(500).json({ error: "Reservation failed" });
   }
 });
-
-
-
 
 module.exports = router;
