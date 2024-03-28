@@ -3,7 +3,6 @@ mongoose.pluralize(null);
 const { connectUserDB } = require("../databases/userDB");
 
 const userSchema = mongoose.Schema({
-  _id: mongoose.ObjectId,
   username: String,
   email_id: String,
   user_category: Number,
