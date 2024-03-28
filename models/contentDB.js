@@ -13,7 +13,6 @@ const sport_workshopSchema = mongoose.Schema({
   time_slot_start: Number,
   time_slot_end: Number,
   content: String,
-  equipment: { String: Number },
   coach_user_id: mongoose.ObjectId,
   max_strength: Number,
   court_id: mongoose.ObjectId,
